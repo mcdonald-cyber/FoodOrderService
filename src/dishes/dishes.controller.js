@@ -59,7 +59,7 @@ function dishExist(req, res, next) {
 
 function read(req, res) {
   
-  res.join({data: res.locals.foundDish})
+  res.json({data: res.locals.foundDish})
   
 };
 

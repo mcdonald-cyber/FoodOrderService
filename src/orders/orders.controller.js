@@ -46,6 +46,12 @@ function bodyHasValidOrder (req, res, next) {
   } else {
       next({ status: 400, message: `Order must have a status of pending, preparing, out-for-delivery, delivered` });
   }
+};
+
+const pendingStatus = (req, res, next) => {
+  const { matchedOrder } = res.locals;
+  if (matchedOrder.status !== "pending") next({ status: 400, message: `An order cannot be deleted unless it is pending` });
+  next();
 }
 
 function orderExist(req, res, next) {
@@ -121,5 +127,5 @@ function destroy(req, res) {
     create: [bodyHasValidOrder, create],
   update: [orderExist, bodyHasValidOrder, checkStatus, update],
     read: [orderExist, read],
-    delete: [checkStatus, orderExist, destroy],
+    delete: [pendingStatus, orderExist, destroy],
   };

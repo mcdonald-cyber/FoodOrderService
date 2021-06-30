@@ -10,10 +10,28 @@ const nextId = require("../utils/nextId");
 
 //! Helper FUNCTION 
 
+// Check for orderId param
+const isThereId = (req, res, next) => {
+  const { orderId } = req.params;
+  if (orderId) {
+      next();
+  } else {
+      next({ status: 400, message: `Must specify orderId` });
+  }
+}
+
 // checking body of Order is valid
 function bodyHasValidOrder (req, res, next) {
-  const { data = {deliverTo, mobileNumber, dishes} } = req.body;
+  const { data = {id, deliverTo, mobileNumber, dishes} } = req.body;
    // Validate the Client data
+   if (!id) next();
+
+   if (orderId === id) {
+       next();
+   } else {
+       next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}.` });
+   }
+
     if (!deliverTo || typeof deliverTo !== "string")
      next({ status: 400, message: `Order must include a deliverTo` });
 
@@ -124,8 +142,8 @@ function destroy(req, res) {
 
   module.exports = {
     list,
-    create: [bodyHasValidOrder, create],
-  update: [orderExist, bodyHasValidOrder, checkStatus, update],
-    read: [orderExist, read],
-    delete: [pendingStatus, orderExist, destroy],
+    create: [isThereId, bodyHasValidOrder, create],
+  update: [isThereId, orderExist, bodyHasValidOrder, checkStatus, update],
+    read: [isThereId, orderExist, read],
+    delete: [isThereId, pendingStatus, orderExist, destroy],
   };

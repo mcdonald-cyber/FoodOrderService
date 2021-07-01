@@ -10,8 +10,7 @@ const nextId = require("../utils/nextId");
 
 // Check for orderId param
 const isThereId = (req, res, next) => {
-    const { orderId } = req.params;
-    if (orderId) {
+    if (res.locals.order.id) {
         next();
     } else {
         next({ status: 400, message: `Must specify orderId` });
@@ -20,8 +19,7 @@ const isThereId = (req, res, next) => {
 
 // Check for whether orderId param exists in orders-data
 const doesOrderExist = (req, res, next) => {
-    const { orderId } = req.params;
-    const matchedOrder = orders.find(order => order.id === orderId);
+    const matchedOrder = orders.find(order => order.id === res.locals.order.id);
     if (matchedOrder) {
         res.locals.matchedOrder = matchedOrder
         next();
@@ -66,15 +64,14 @@ const doesStatusPropExist = (req, res, next) => {
 
 // Check whether orderId param matches id key from request body
 const doesIdMatch = (req, res, next) => {
-    const { orderId } = req.params;
     const { data: { id } = {} } = req.body;
 
     if (!id) next();
 
-    if (orderId === id) {
+    if (res.locals.order.id === id) {
         next();
     } else {
-        next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}.` });
+        next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${res.locals.order.id}.` });
     }
 }
 
@@ -104,17 +101,15 @@ const read = (req, res, next) => {
 }
 
 const update = (req, res, next) => {
-    const { orderId } = req.params;
     const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
-    const newOrder = { id: orderId, deliverTo, mobileNumber, status, dishes };
-    const index = orders.findIndex(order => order.id === orderId);
+    const newOrder = { id: res.locals.order.id, deliverTo, mobileNumber, status, dishes };
+    const index = orders.findIndex(order => order.id === res.locals.order.id);
     orders[index] = newOrder;
     res.status(200).json({ data: newOrder });
 }
 
 const destroy = (req, res, next) => {
-    const { orderId } = req.params;
-    const index = orders.findIndex(order => order.id === orderId);
+    const index = orders.findIndex(order => order.id === res.locals.order.id);
     orders.splice(index, 1);
     res.sendStatus(204);
 }

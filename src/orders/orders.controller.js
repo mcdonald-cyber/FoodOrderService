@@ -19,19 +19,24 @@ const isThereId = (req, res, next) => {
       next({ status: 400, message: `Must specify orderId` });
   }
 }
-
-// checking body of Order is valid
-function bodyHasValidOrder (req, res, next) {
-  const { data = {id, deliverTo, mobileNumber, dishes} } = req.body;
-   // Validate the Client data
-   if (!id) next();
+// Check for Id valid
+const validId = (req, res, next) => {
+  const { orderId } = req.params;
+  const { data: { id } = {} } = req.body;
+if (!id) next();
 
    if (orderId === id) {
        next();
    } else {
        next({ status: 400, message: `Order id does not match route id. Order: ${id}, Route: ${orderId}.` });
    }
+  };
 
+// checking body of Order is valid
+function bodyHasValidOrder (req, res, next) {
+  const { data = {deliverTo, mobileNumber, dishes} } = req.body;
+   // Validate the Client data
+   
     if (!deliverTo || typeof deliverTo !== "string")
      next({ status: 400, message: `Order must include a deliverTo` });
 
@@ -142,8 +147,8 @@ function destroy(req, res) {
 
   module.exports = {
     list,
-    create: [isThereId, bodyHasValidOrder, create],
-  update: [isThereId, orderExist, bodyHasValidOrder, checkStatus, update],
+    create: [bodyHasValidOrder, create],
+  update: [isThereId, orderExist, bodyHasValidOrder, checkStatus, validId, update],
     read: [isThereId, orderExist, read],
-    delete: [isThereId, pendingStatus, orderExist, destroy],
+    delete: [isThereId, orderExist, pendingStatus, destroy],
   };

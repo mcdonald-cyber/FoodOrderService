@@ -1,93 +1,89 @@
 const path = require("path");
 
-// Use the existing dishes data
+// The existing dishes data
 const dishes = require(path.resolve("src/data/dishes-data"));
 
-// Use this function to assign ID's when necessary
+// Function to assign ID's when necessary
 const nextId = require("../utils/nextId");
 
-// TODO: Implement the /dishes handlers needed to make the tests pass
-function bodyHasValidDish(req, res, next) {
-   const { data = {} } = req.body;
-    // Validate the Client data
-  const requiredFields= ["name", "description", "price", "image_url"];
-  for (const field of requiredFields) {
-    if (!data[field]) {
-      return next({
-        status: 400,
-        message:`Dish must include a ${field}`
-      });
+// Validation functions
+
+// Check for dishId param
+const isThereId = (req, res, next) => {
+    const {dishId} = req.params;
+    if (dishId) {
+        next();
+    } else {
+        next({status: 404, message: `No path for ${req.orinalUrl}`});
     }
-  };
-  //Check if Price is less than Zero
-  const {name, description, price, image_url} = data
-  if (!Number.isInteger(price) || price<=0) {
-      return next({
-      status:400,
-      message:`Dish price must be greater than zero`
-      });
-  };
 }
 
-function create(req, res, next) {
-   const { data: {name, description, price, image_url} = {} } = req.body;
-  //save the client data to our data store
-  const newDish = {
-    id: nextId(),
-    name,
-    description, 
-    price, 
-    image_url,
-  };
-  //Return appropriate response
-  dishes.push(newDish);
-  res.status(201).json({ data: newDish});
-};
-
-function dishExist(req, res, next) {
-  const {dishId} = req.params;
-  const foundDish = dishes.find((dish) => dish.id === dishId);
-  if (foundDish === undefined) {
-    return next({
-      status: 404,
-      message: `Dish does not exist: ${dishId}.`,
-    });
-  }
-  res.locals.foundDish = foundDish;
-  next();
+// Check for whether Id exists in dishes-data 
+const doesDishExist = (req, res, next) => {
+    const {dishId} = req.params;
+    const matchedDish = dishes.find(dish => dish.id === dishId);
+    if (matchedDish) {
+        res.locals.matchedDish = matchedDish;
+        next();
+    } else {
+        next({status: 404, message: `Dish does not exist: ${req.params.dishId}`});
+    }
 }
 
-function read(req, res) {
-  
-  res.json({data: res.locals.foundDish})
-  
-};
+// Check for whether incoming request contains the necessary keys with valid values
+const doesReqHaveProps = (req, res, next) => {
+    const { data: { name, description, price, image_url } = {} } = req.body;
 
+    if (!name || typeof name !== "string") next({status: 400, message: `Dish must include a name`});
+    if (!description || typeof name !== "string") next({status: 400, message: `Dish must include a description`});
+    if (price <= 0 || typeof price !== "number") next({status: 400, message: `Dish must include a price`});
+    if (!image_url || typeof name !== "string") next({status: 400, message: `Must include a image_url`});
 
-function update(req, res) {
-  const {updateDish} = res.locals;
-  const {foundDish} = res.locals;
-  // if dish does not exist, error
-  if (updateDish.id !== foundDish.id) {
-    return next({
-      status: 400,
-      message: `You can not change existing dish id ${foundDish.id} to ${updateDish.id}`,
-    });
-  }
-  //update found foundDish with updateDish in newDish
-  const newDish = { ...foundDish, ...updateDish }
-  res.json({ data: newDish });
-  
-};
+    next();
+}
 
+// Check for whether request param dishId matches with request body Id
+const doesIdMatch = (req, res, next) => {
+    const { data: { id } = {} } = req.body;
+    const {dishId} = req.params;
+    if (!id) next();
+    if (id === dishId) {
+        next();
+    } else {
+        next({status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`});
+    }
+}
 
-function list(req, res) {
-  res.json({data: dishes});
-};
+// Route functions
+const create = (req, res) => {
+    const { data: { name, description, price, image_url } = {} } = req.body;
+    const id = nextId();
+    const newDish = {id, name, description, price, image_url};
+    dishes.push(newDish);
+    res.status(201).json({data: newDish});
+}
+
+const read = (req, res) => {
+    const {matchedDish} = res.locals;
+    res.status(200).json({data: matchedDish});
+}
+
+const update = (req, res, next) => {
+    const {dishId} = req.params;
+    const { data: { name, description, price, image_url } = {} } = req.body;
+    const index = dishes.findIndex(dish => dish.id === dishId);
+    const updatedDish = {id: dishId, name, description, price, image_url};
+    dishes[index] = updatedDish;
+    res.status(200).json({data: updatedDish});
+}
+
+const list = (req, res) => {
+    res.status(200).json({data: dishes});
+}
 
 module.exports = {
-  create: [bodyHasValidDish, create],
-  update: [dishExist, bodyHasValidDish, update],
-  read: [dishExist, read],
-  list,
-};
+    list,
+    create: [doesReqHaveProps, create],
+    update: [isThereId, doesDishExist, doesReqHaveProps, doesIdMatch, update],
+    read: [isThereId, doesDishExist, read],
+}

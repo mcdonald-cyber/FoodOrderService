@@ -10,8 +10,7 @@ const nextId = require("../utils/nextId");
 
 // Check for dishId param
 const isThereId = (req, res, next) => {
-    const {dishId} = req.params;
-    if (dishId) {
+    if (res.locals.dish.id) {
         next();
     } else {
         next({status: 404, message: `No path for ${req.orinalUrl}`});
@@ -20,13 +19,13 @@ const isThereId = (req, res, next) => {
 
 // Check for whether Id exists in dishes-data 
 const doesDishExist = (req, res, next) => {
-    const {dishId} = req.params;
-    const matchedDish = dishes.find(dish => dish.id === dishId);
+   
+    const matchedDish = dishes.find(dish => dish.id === res.locals.dish.id);
     if (matchedDish) {
         res.locals.matchedDish = matchedDish;
         next();
     } else {
-        next({status: 404, message: `Dish does not exist: ${req.params.dishId}`});
+        next({status: 404, message: `Dish does not exist: ${res.locals.dish.id}`});
     }
 }
 
@@ -45,12 +44,12 @@ const doesReqHaveProps = (req, res, next) => {
 // Check for whether request param dishId matches with request body Id
 const doesIdMatch = (req, res, next) => {
     const { data: { id } = {} } = req.body;
-    const {dishId} = req.params;
+    
     if (!id) next();
-    if (id === dishId) {
+    if (id === res.locals.dish.id) {
         next();
     } else {
-        next({status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`});
+        next({status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${res.locals.dish.id}`});
     }
 }
 
@@ -69,10 +68,9 @@ const read = (req, res) => {
 }
 
 const update = (req, res, next) => {
-    const {dishId} = req.params;
     const { data: { name, description, price, image_url } = {} } = req.body;
-    const index = dishes.findIndex(dish => dish.id === dishId);
-    const updatedDish = {id: dishId, name, description, price, image_url};
+    const index = dishes.findIndex(dish => dish.id === res.locals.dish.id);
+    const updatedDish = {id: res.locals.dish.id, name, description, price, image_url};
     dishes[index] = updatedDish;
     res.status(200).json({data: updatedDish});
 }

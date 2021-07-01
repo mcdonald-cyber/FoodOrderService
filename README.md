@@ -3,17 +3,17 @@
 
 ## Backend of a food ordering site
 
-This is a project was produced under the guidiance of my courses with [Thinkful](thinkful.com). It is an applicaton's backend that allows the user to order food, creating new orders that add dishes. Creating, updating and deleting dishes are some capable functions. Same for the orders, too.
+This project was produced under the guidiance of my courses with [Thinkful](thinkful.com). It is an applicaton's backend that allows the user to order food, creating new orders that add dishes. Creating, updating and deleting dishes are some capable functions. Same for the orders, too.
 The was created in a group effort with fellow cohort members.
-Languages used in creation were Javascript, Node, Express and Postgres. 
+Languages used in creation were Javascript and Node. 
 
 The project focused on being able to:
-* Running tests from the command line
-* Using common middleware packages
-* Receiving requests through routes
-* Accessing relevant information through route parameters
-* Building an API following RESTful design principles
-* Writing custom middleware functions
+* Run tests from the command line
+* Use common middleware packages
+* Receive requests through routes
+* Accesse relevant information through route parameters
+* Build an API following RESTful design principles
+* Write custom middleware functions
 
 ## Website
 The Application has not been deployed yet.
